@@ -1,0 +1,36 @@
+---
+
+- name: install dwarf fortress dependencies (void)
+  when: ansible_distribution == "void"
+  become: yes
+  xbps:
+    name: '{{item}}'
+  with_items:
+    - SDL_image
+    - SDL_ttf
+    - libopenal
+    - glu
+
+- name: download dwarf fortress (Linux)
+  when: ansible_system == "Linux"
+  get_url:
+    dest: "{{ansible_env.HOME}}/tmp/df_44_11_linux.tar.bz2"
+    url: http://www.bay12games.com/dwarves/df_44_11_linux.tar.bz2
+    sha256sum: 4e13652d0b9c9a88bdc9628d50ef60ab944930497f131dc1b1d74c41fb743fe2
+
+- name: unpack dwarf fortress (Linux)
+  when: ansible_system == "Linux"
+  unarchive:
+    src: "{{ansible_env.HOME}}/tmp/df_44_11_linux.tar.bz2"
+    dest: "{{ansible_env.HOME}}/bin/"
+    creates: "{{ansible_env.HOME}}/bin/df_linux/df"
+
+- name: add script to start dwarf fortress (Linux)
+  when: ansible_system == "Linux"
+  blockinfile:
+    path: "{{ansible_env.HOME}}/bin/dwarf_fortress"
+    create: yes
+    mode: 0700
+    block: |
+      #!/bin/sh
+      cd ~/bin/df_linux && ./df

@@ -1,0 +1,7 @@
+---
+
+- name: update Void package cache
+  when: ansible_os_family == "void"
+  become: yes
+  xbps:
+    update_cache: yes

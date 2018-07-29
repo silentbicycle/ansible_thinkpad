@@ -1,0 +1,32 @@
+---
+- name: install networking tools (void)
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - arp-scan
+    - curl
+    - ii
+    - nmap
+    - rsync
+    - wget
+    - bind-utils
+
+- name: install networking tools (void, x11)
+  become: yes
+  when: ansible_os_family == "void" and use_x11
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - wireshark-qt
+
+- name: add the current user to the group wireshark
+  become: true
+  when: ansible_os_family == "void" and use_x11
+  user:
+    append: yes
+    groups: wireshark
+    name: '{{ansible_user_id}}'

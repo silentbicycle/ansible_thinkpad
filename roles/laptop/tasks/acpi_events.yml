@@ -1,0 +1,69 @@
+---
+
+# The external display connect/disconnect is commented out below because
+# automatic disconnecting isn't quite right yet.
+- name: add ACPI handlers for various hardware events
+  when: is_laptop and ansible_distribution == "void"
+  become: yes
+  blockinfile:
+    backup: yes
+    path: /etc/acpi/handler.sh
+    insertbefore: '    \*\)'
+    block: |
+        button/mute)
+        case "$2" in
+                MUTE)
+                        logger "Toggling mute..."
+                        # setting Master mute via toggle seems to set mute
+                        # for the headphones / speaker, but toggling it off
+                        # leaves them muted. Seems to be a known issue.
+                        amixer sset Master toggle | grep "\[on\]" \
+                            && amixer sset Headphone unmute \
+                            && amixer sset Speaker unmute;;
+                *) logger "ACPI action undefined (MUTE): $2" ;;
+        esac
+        ;;
+        button/volumedown)
+        case "$2" in
+                VOLDN)
+                amixer set Master 5\%- ;;
+                *) logger "ACPI action undefined (VOLDN): $2" ;;
+        esac
+        ;;
+        button/volumeup)
+        case "$2" in
+                VOLUP)
+                amixer set Master 5\%+ ;;
+                *) logger "ACPI action undefined (VOLUP): $2" ;;
+        esac
+        ;;
+        video/brightnessdown)
+        case "$2" in
+                BRTDN)
+                xbacklight -dec 10 ;;
+                *) logger "ACPI action undefined (BRTDN): $2" ;;
+        esac
+        ;;
+        video/brightnessup)
+        case "$2" in
+                BRTUP)
+                xbacklight -inc 10 ;;
+                *) logger "ACPI action undefined (BRTUP): $2" ;;
+        esac
+        ;;
+        # jack/videoout)
+        # case "$2" in
+        #         VIDEOOUT)
+        #         if [ "$3" = "unplug" ]; then
+        #             logger "Disconnecting external display"
+        #             xrandr --output DP1 --off
+        #         else
+        #             logger "Connecting external display"
+        #             xrandr --output eDP1 --left-of DP1 \
+        #             && xrandr --output eDP1 --auto \
+        #             && xrandr --output DP1 --auto
+        #         fi
+        #         ;;
+        #         *) logger "ACPI action undefined (VIDEOOUT): $2" ;;
+        # esac
+        # ;;

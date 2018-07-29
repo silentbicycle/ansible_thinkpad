@@ -1,0 +1,4 @@
+# USB device "18d1:4ee1 Google Inc. Nexus Device (MTP)"
+# get the path from lsusb, e.g. bus 005 device 051 becomes:
+#     udevadm info -a -p $(udevadm info -q path -n /dev/bus/usb/005/051)
+SUBSYSTEM=="usb", ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="4ee1", MODE="0660", GROUP="plugdev"

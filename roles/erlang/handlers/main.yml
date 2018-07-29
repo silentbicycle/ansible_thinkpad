@@ -1,0 +1,7 @@
+---
+
+- name: install rebar3
+  copy:
+    src: "{{ansible_env.HOME}}/tmp/git/rebar3/rebar3"
+    dest: "{{ansible_env.HOME}}/bin/rebar3"
+    remote_src: yes

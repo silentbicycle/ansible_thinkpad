@@ -1,0 +1,23 @@
+---
+run_sshd: true
+use_x11: true
+
+graphics_card: i915
+sound_card: 'hda-intel'
+
+install_git_homedir: true
+vc_host_path: example.com/vc
+git_homedir_repo_name: homedir
+
+install_av: true
+install_games: true
+install_phone_tools: true
+
+install_c: true
+install_erlang: true
+install_lua: true
+install_python: true
+install_j: true
+install_k: true
+
+mpd_dir: /home/music/

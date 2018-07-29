@@ -1,0 +1,12 @@
+---
+
+- name: install web browsers
+  become: yes
+  when: ansible_distribution == "void"
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - chromium
+    - firefox
+    - w3m

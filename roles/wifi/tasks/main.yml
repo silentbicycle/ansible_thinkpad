@@ -1,0 +1,52 @@
+---
+
+# using connman / connmanctl for wifi & ethernet management
+
+# ensure the symlinks for these services are absent
+- name: disable dhcpd and wpa_supplicant services
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  file:
+    path: /var/service/{{item}}
+    state: absent
+  with_items:
+    - dhcpcd
+    - wpa_supplicant
+
+- name: install connman
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  xbps:
+    name: connman
+    state: latest
+
+- name: enable and start services for connman
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  file:
+    src: /etc/sv/{{item}}
+    path: /var/service/{{item}}
+    state: link
+    owner: root
+    group: root
+    mode: 0770
+  with_items:
+    - dbus
+    - connmand
+
+# basic connman usage:
+#
+# Needs to be run with sudo:
+#     $ sudo connmanctl
+# Turn the wifi on (also valid: disable, for e.g. airplane mode)
+#     > enable wifi
+# Enable a wpa_supplicant agent; PSK networks will fail without this
+#     > agent on
+# Scan for wifi networks (doesn't print them)
+#     > scan wifi
+# Actually print them
+#     > services
+# Connect to a wifi network, with tab completion for the long unique ID.
+# This may prompt for a password.
+#     > connect wifi_ <tab complete>
+#     > exit

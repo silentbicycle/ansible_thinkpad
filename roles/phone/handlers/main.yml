@@ -1,0 +1,6 @@
+---
+
+- name: update udev rules
+  become: yes
+  when: ansible_os_family == "void"
+  command: udevadm control --reload

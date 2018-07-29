@@ -1,0 +1,28 @@
+---
+- hosts: laptop
+  roles:
+    - common
+    - { role: void, when: ansible_distribution == "void" }
+    - laptop
+    - { role: git_homedir, when: install_git_homedir }
+    - { role: x11, when: use_x11 }
+    - dev
+    - { role: phone, when: install_phone_tools }
+    - wifi
+
+    # programming languages / platforms
+    - { role: c, when: install_c }
+    - { role: clojure, when: install_clojure }
+    - { role: erlang, when: install_erlang }
+    - { role: j, when: install_j }
+    - { role: k, when: install_k }
+    - { role: lisp, when: install_lisp }
+    - { role: lua, when: install_lua }
+    - { role: ocaml, when: install_ocaml }
+    - { role: prolog, when: install_prolog }
+    - { role: python, when: install_python }
+
+    # other conditional roles
+    - { role: av, when: install_av }
+    - { role: games, when: install_games }
+    - { role: virtualization, when: install_virtualization }

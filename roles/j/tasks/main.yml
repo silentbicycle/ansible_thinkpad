@@ -1,0 +1,52 @@
+---
+
+- name: ensure destination directories exist (j)
+  file:
+    path: "{{item}}"
+    state: directory
+  with_items:
+    - "{{ansible_env.HOME}}/tmp/git/"
+    - "{{ansible_env.HOME}}/bin/"
+
+- name: install j dependencies (console)
+  when: ansible_distribution == "void"
+  become: yes
+  xbps:
+    name: '{{item}}'
+  with_items:
+    - libedit
+
+- name: install j dependencies (x11)
+  when: ansible_distribution == "void" and use_x11
+  become: yes
+  xbps:
+    name: '{{item}}'
+  with_items:
+    - qt5-webkit
+    - qt5-svg
+    - qt5-multimedia
+    - qt5-websockets
+
+- name: install j
+  when: ansible_system == "Linux"
+  get_url:
+    dest: "{{ansible_env.HOME}}/tmp/j807_linux64.tar.gz"
+    url: http://www.jsoftware.com/download/j807/install/j807_linux64.tar.gz
+    sha256sum: f4b27b6f8cf8ccb2da122fc6898df1f121d7fd25c81917258edbf0909aa3f87f
+
+- name: unpack j
+  when: ansible_system == "Linux"
+  unarchive:
+    src: "{{ansible_env.HOME}}/tmp/j807_linux64.tar.gz"
+    dest: "{{ansible_env.HOME}}/bin/"
+    creates: "{{ansible_env.HOME}}/bin/j64-807/bin/jconsole"
+
+# this is needed by jconsole, it looks like it's assuming
+# the .so version used in debian, but the actual version is 20180525-3.1...
+- name: symlink libedit to libedit.so.2
+  when: ansible_distribution == "void"
+  become: yes
+  file:
+    src: /usr/lib/libedit.so.0
+    dest: /usr/lib/libedit.so.2
+    state: link

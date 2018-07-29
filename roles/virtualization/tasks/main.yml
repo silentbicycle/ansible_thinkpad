@@ -1,0 +1,28 @@
+---
+
+# Note: if the host has been running for a while, building the kernel
+# plugins may fail, because an older kernel is being used than still has
+# development headers on on disk (or something like that).
+#
+# In this case, reboot, and then run:
+#     sudo xbps-reconfigure -f virtualbox-ose-dkms
+# to rebuild the kernels.
+#
+# Also, ensure that VT-x is enabled in the computer's BIOS.
+
+- name: install vagrant (void)
+  become: yes
+  xbps:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - vagrant
+    - virtualbox-ose
+
+- name: ensure user is in vboxusers group
+  become: yes
+  when: ansible_os_family == "void"
+  user:
+    append: yes
+    groups: vboxusers
+    name: '{{ansible_user_id}}'

@@ -1,0 +1,8 @@
+---
+
+- name: install kona
+  become: yes
+  when: ansible_distribution == "void"
+  xbps:
+    name: kona
+    state: latest

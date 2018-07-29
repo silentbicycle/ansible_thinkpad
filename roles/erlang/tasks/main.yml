@@ -1,0 +1,43 @@
+---
+
+- name: install Erlang related tooling (Void)
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - erlang
+
+- name: ensure destination directories exist (Erlang)
+  file:
+    path: "{{item}}"
+    state: directory
+  with_items:
+    - "{{ansible_env.HOME}}/tmp/git/"
+    - "{{ansible_env.HOME}}/bin/"
+    
+- name: clone rebar3
+  git:
+    repo: https://github.com/erlang/rebar3.git
+    dest: "{{ansible_env.HOME}}/tmp/git/rebar3"
+    update: no
+    accept_hostkey: true
+
+- name: build rebar3
+  command: ./bootstrap
+  args:
+    chdir: "{{ansible_env.HOME}}/tmp/git/rebar3"
+    creates: "{{ansible_env.HOME}}/tmp/git/rebar3/rebar3"
+  notify:
+    - install rebar3
+
+# this is void-specific because different distros install
+# the man pages in different paths
+- name: add Erlang man pages to manpath (void)
+  become: yes
+  when: ansible_os_family == "void"
+  lineinfile:
+    path: /etc/man.conf
+    line: "manpath /usr/lib/erlang/man/"
+    create: yes

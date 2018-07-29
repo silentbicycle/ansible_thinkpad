@@ -1,0 +1,88 @@
+---
+
+- name: add bin dir for root
+  become: yes
+  file: path="/root/bin/" state="directory"
+
+- name: configure cron for root
+  become: yes
+  file: path="/root/bin/cron/" state="directory"
+
+- name: copy exec_dir script (root)
+  become: yes
+  copy: src="exec_dir" mode="0744" dest="/root/bin/exec_dir"
+
+# Void doesn't have a cron daemon installed by default
+- name: install dcron on void
+  when: ansible_distribution == "void"
+  become: yes
+  xbps:
+    name: dcron
+    state: present
+
+- name: enable dcron service on void
+  when: ansible_distribution == "void"
+  become: yes
+  file:
+    state: link
+    src: /etc/sv/dcron
+    dest: /var/service/dcron
+    owner: root
+    group: root
+
+# Note: dcron's aliases like @hourly don't work here, because it
+# requires an extra `ID=name` field, which is used for creating a
+# timestamp file (in case the system isn't on all the time). Ansible
+# doesn't have a way to configure that field. Just use numeric time
+# settings instead.
+- name: configure parametric cron directories for root
+  become: yes
+  cron:
+    name: "exec_dir {{item}}"
+    special_time: "{{item}}"
+    job: "/root/bin/exec_dir /root/bin/cron/{{item}}.d"
+  with_items:
+      - reboot
+
+- name: configure yearly
+  become: yes
+  cron:
+    name: "exec_dir yearly"
+    month: 1
+    day: 1
+    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/yearly.d"
+
+- name: configure monthly
+  become: yes
+  cron:
+    name: "exec_dir monthly"
+    day: 1
+    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/monthly.d"
+
+- name: configure weekly
+  become: yes
+  cron:
+    name: "exec_dir weekly"
+    weekday: 0
+    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/weekly.d"
+
+- name: configure daily
+  become: yes
+  cron:
+    name: "exec_dir daily"
+    hour: 0
+    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/daily.d"
+
+- name: configure hourly
+  become: yes
+  cron:
+    name: "exec_dir hourly"
+    minute: 0
+    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/hourly.d"
+
+- name: configure minutely
+  become: yes
+  cron:
+    name: "exec_dir minutely"
+    minute: "0-59"
+    job: "/root/bin/exec_dir /root/bin/cron/minutely.d"

@@ -1,0 +1,44 @@
+---
+
+- name: install nonfree void repo for steam
+  become: yes
+  when: ansible_distribution == "void"
+  xbps:
+    name: void-repo-nonfree
+    state: present
+
+- name: install multilib void repo
+  become: yes
+  when: ansible_distribution == "void"
+  xbps:
+    name: void-repo-multilib
+    state: present
+
+- name: update void package cache
+  when: ansible_distribution == "void"
+  become: yes
+  xbps:
+    update_cache: yes
+
+- name: install multilib packages for steam
+  when: ansible_distribution == "void"
+  become: yes
+  xbps:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - libpulseaudio-32bit
+    - libtxc_dxtn-32bit
+    - fontconfig-32bit
+    - libGL-32bit
+    - mesa-ati-dri-32bit
+    - mono
+
+- name: install steam
+  when: ansible_distribution == "void"
+  become: yes
+  xbps:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - steam

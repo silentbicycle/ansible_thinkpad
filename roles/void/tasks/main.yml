@@ -1,0 +1,157 @@
+---
+
+- name: install my preferred shell
+  become: yes
+  xbps: name=oksh state=latest
+
+- name: ensure user is in wheel group
+  become: yes
+  user:
+    append: yes
+    groups: wheel
+    name: '{{ansible_user_id}}'
+
+
+- name: change shell to oksh
+  become: yes
+  user:
+    name: '{{ansible_user_id}}'
+    shell: /bin/oksh
+
+- name: install man pages
+  become: yes
+  xbps:
+    name: '{{item}}'
+    state: present
+  with_items:
+    - man-pages
+    - man-pages-devel
+    - man-pages-posix
+
+# https://wiki.voidlinux.eu/Activating_a_log_daemon
+- name: install logging daemon
+  become: yes
+  xbps:
+    name: socklog-void
+    state: present
+
+- name: ensure socklog service symlink exists
+  become: yes
+  file:
+    src: "/etc/sv/{{item}}"
+    dest: "/var/service/{{item}}"
+    state: link
+  with_items:
+    - socklog-unix
+    - nanoklogd
+
+- name: ensure user is in socklog group
+  become: yes
+  user:
+    append: yes
+    groups: socklog
+    name: '{{ansible_user_id}}'
+
+- name: enable incoming sshd
+  become: yes
+  when: run_sshd is defined and run_sshd
+  file:
+    src: /etc/sv/sshd
+    dest: /var/service/sshd
+    state: link
+    owner: root
+    group: root
+    mode: 0770
+
+- name: set console keymap to dvorak
+  become: yes
+  lineinfile:
+    backup: yes
+    state: present
+    create: yes
+    path: /etc/rc.conf
+    regexp: '^#?KEYMAP='
+    line: 'KEYMAP="dvorak ctrl"'
+
+- name: set hardware clock to UTC
+  become: yes
+  lineinfile:
+    backup: yes
+    state: present
+    create: yes
+    path: /etc/rc.conf
+    regexp: '^#?HARDWARECLOCK='
+    line: 'HARDWARECLOCK=UTC'
+
+- name: set local timezone to America/Detroit
+  become: yes
+  lineinfile:
+    backup: yes
+    state: present
+    create: yes
+    path: /etc/rc.conf
+    regexp: '^#?TIMEZONE='
+    line: 'TIMEZONE=America/Detroit'
+
+- name: set terminal font
+  become: yes
+  lineinfile:
+    backup: yes
+    state: present
+    create: yes
+    path: /etc/rc.conf
+    regexp: '^#FONT='
+    line: 'FONT=ter-v22n'
+
+- name: install an ntp daemon (OpenNTPD)
+  become: yes
+  xbps:
+    name: openntpd
+    state: present
+
+- name: configure OpenNTPD
+  become: yes
+  lineinfile:
+    backup: yes
+    create: yes
+    state: present
+    path: /etc/ntpd.conf
+    line: 'servers pool.ntp.org'
+
+- name: enable OpenNTPD service
+  become: yes
+  file:
+    src: /etc/sv/openntpd
+    dest: /var/service/openntpd
+    state: link
+    owner: root
+    group: root
+    mode: 0770
+
+# https://wiki.voidlinux.eu/XBPS#Substituting_the_default_system_repository_with_a_regional_repository
+- name: use a closer Void package mirror
+  become: yes
+  lineinfile:
+    backup: yes
+    create: yes
+    path: /etc/xbps.d/00-repository-main.conf
+    state: present
+    regexp: '^repository='
+    # Potsdam, NY; will fall back on default mirror in Germany if 404
+    line: 'repository=https://mirror.clarkson.edu/voidlinux/current/'
+
+- name: ensure root weekly cron dir exists
+  become: yes
+  file:
+    path: "{{ansible_env.HOME}}/bin/cron/weekly.d/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: periodically clear xbps pkg cache
+  become: yes
+  copy:
+    src: "clear-xbps-pkg-cache"
+    mode: "0744"
+    dest: "{{ansible_env.HOME}}/bin/cron/weekly.d/clear-xbps-pkg-cache"

@@ -1,0 +1,13 @@
+---
+- name: install OCaml and related tooling (Void)
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - ocaml
+    - opam
+    # these are recommended by opam
+    - m4
+    - darcs

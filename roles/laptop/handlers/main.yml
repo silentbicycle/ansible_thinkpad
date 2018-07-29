@@ -1,0 +1,11 @@
+---
+
+- name: update grub
+  when: ansible_distribution == "void" and is_laptop
+  become: yes
+  raw: 'update-grub'
+
+- name: reconfigure kernel
+  when: ansible_distribution == "void" and is_laptop
+  become: yes
+  raw: 'xbps-reconfigure -f linux4.16'

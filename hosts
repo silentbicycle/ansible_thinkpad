@@ -1,0 +1,7 @@
+# see: http://docs.ansible.com/intro_inventory.html
+
+[laptop]
+malort
+
+[void]
+malort

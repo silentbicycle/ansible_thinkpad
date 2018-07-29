@@ -1,0 +1,11 @@
+---
+
+- name: install clojure and related tooling (Void)
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - clojure
+    - leiningen

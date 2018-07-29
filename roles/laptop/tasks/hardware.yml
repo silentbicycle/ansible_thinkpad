@@ -1,0 +1,252 @@
+---
+
+# Most of this is based on:
+# https://wiki.archlinux.org/index.php/Lenovo_ThinkPad_X1_Carbon_(Gen_6)
+
+# https://wiki.archlinux.org/index.php/Lenovo_ThinkPad_X1_Carbon_(Gen_6)#Power_management.2FThrottling_issues
+- name: install void laptop power management packages
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  xbps:
+    name: '{{item}}'
+    state: present
+  with_items:
+    - acpi
+    - acpid
+    - laptop-mode
+    - powertop
+
+- name: enable acpid service
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  file:
+    src: /etc/sv/acpid
+    dest: /var/service/acpid
+    state: link
+    owner: root
+    group: root
+    mode: 0770
+
+### reset the threshold for CPU overtemp throttling, apparently it's
+### misconfigured on Linux (80 C, rather than 97 C)?
+- name: install tool for patching power management
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  xbps:
+    name: msr-tools
+    state: present
+
+- name: create cpu-throttling.sh
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  blockinfile:
+    path: /usr/local/bin/cpu-throttling.sh
+    create: yes
+    owner: root
+    group: root
+    mode: 0770
+    block: |
+      #!/bin/bash
+      /bin/modprobe msr
+      wrmsr -a 0x1a2 0x3000000 # which sets the offset to 3 C, so the new trip point is 97 C
+
+- name: ensure minutely root cron dir exists
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  file:
+    path: /root/bin/cron/minutely.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0770
+
+- name: symlink cpu-throttling script into minutely
+  become: yes
+  file:
+    src: /usr/local/bin/cpu-throttling.sh
+    dest: /root/bin/cron/minutely.d/cpu-throttling.sh
+    owner: root
+    group: root
+    state: link
+
+
+# https://gist.github.com/greigdp/bb70fbc331a0aaf447c2d38eacb85b8f
+- name: enable GPU power saving
+  become: yes
+  when: ansible_distribution == "void" and is_laptop and graphics_card is defined and graphics_card == 'i915'
+  lineinfile:
+    create: yes
+    backup: yes
+    dest: /etc/modprobe.d/i915.conf
+    line: 'options i915 modeset=1 enable_rc6=1 enable_fbc=1 enable_guc_loading=1 enable_guc_submission=1 enable_psr=1'
+
+
+### patching ACPI DSDT, based on https://delta-xi.net/#056
+- name: install tools for patching ACPI DSDT
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  xbps:
+    name: '{{item}}'
+    state: present
+  with_items:
+    - cpio
+    - acpica-utils
+
+- name: make a dir for DSDT patching
+  become: yes
+  file:
+    path: /tmp/dsdt_patching
+    state: directory
+    owner: root
+    group: wheel
+    mode: 0770
+
+## Now this is locally vendored, since it needed to be modified slightly:
+## the OperationRegion line in the patch file was changed.
+# - name: download the X1 carbon gen 6 DSDT patch
+#   get_url:
+#     url: https://delta-xi.net/download/X1C6_S3_DSDT.patch
+#     dest: /tmp/dsdt_patching/X1C6_S3_DSDT.patch
+#     checksum: sha256:645777cdbe82a516aa2c330f6c45322fc51b094d3e24d5b51737793f96c8669d
+
+# This is using the `command` module because just using `become: yes`
+# with `copy` doesn't appear to work when the local _src_ is unreadable
+# without become (i.e., become seems to apply to creating the target, but
+# not reading the source).
+- name: dump ACPI DSDT
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  command: cp /sys/firmware/acpi/tables/DSDT /tmp/dsdt_patching/dsdt.aml
+  args:
+    creates: /tmp/dsdt_patching/dsdt.aml
+
+- name: set ACPI DSDT copy file permissions
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  file:
+    path: /tmp/dsdt_patching/dsdt.aml
+    owner: root
+    group: wheel
+    mode: 0770
+
+- name: decompile the ACPI DSDT
+  command: iasl -d dsdt.aml
+  args:
+    chdir: /tmp/dsdt_patching
+    creates: /tmp/dsdt_patching/dsdt.dsl
+
+- name: check whether the file has been patched already
+  shell: 'grep "^DefinitionBlock" /tmp/dsdt_patching/dsdt.dsl'
+  register: grep_dsdt_for_patch
+
+# The patch module doesn't recognize the message that the patch has
+# already been applied, so it's treated as a failure, which keeps
+# the patch module from being idempotent. :(
+# Known issue: https://github.com/ansible/ansible/issues/32803
+- name: apply the ACPI DSDT patch
+  when: '"0x00000001" not in grep_dsdt_for_patch.stdout'
+  patch:
+    backup: yes
+    basedir: /tmp/dsdt_patching
+    src: X1C6_S3_DSDT.patch
+
+- name: recompile the ACPI DSDT
+  command: iasl -ve -tc -p patched_dsdt dsdt.dsl
+  args:
+    chdir: /tmp/dsdt_patching
+    creates: /tmp/dsdt_patching/patched_dsdt.aml
+
+- name: make directory for CPIO archive
+  file:
+    path: /tmp/dsdt_patching/kernel/firmware/acpi
+    state: directory
+
+- name: copy patched DSDT into CPIO archive directory
+  copy:
+    src: /tmp/dsdt_patching/patched_dsdt.aml
+    dest: /tmp/dsdt_patching/kernel/firmware/acpi/dsdt.aml
+
+- name: build CPIO archive
+  shell: find kernel | cpio -H newc --create > acpi_override.img
+  args:
+    creates: /tmp/dsdt_patching/acpi_override.img
+    chdir: /tmp/dsdt_patching/
+
+- name: copy acpi_override to /boot
+  become: yes
+  copy:
+    src: /tmp/dsdt_patching/acpi_override.img
+    dest: /boot/acpi_override.img
+    owner: root
+    group: root
+    mode: 0700
+
+# this doesn't work yet -- this config option is newly supported in grub
+# 2.04, and void is currently using 2.02. When this does work, editing
+# /etc/grub.d/10_linux with lineinfile below may no longer be necessary.
+# For now, ensure it is absent, so the setting isn't applied twice.
+- name: add loading the override to grub config via grub options
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  lineinfile:
+    create: yes
+    backup: yes
+    dest: /etc/default/grub
+    state: absent
+    regexp: '^GRUB_EARLY_INITRD_LINUX_CUSTOM='
+    line: 'GRUB_EARLY_INITRD_LINUX_CUSTOM="acpi_override.img"'
+  notify:
+    - update grub
+
+# This ensures that the change will be included when update-grub is run.
+- name: add loading the ACPI DSDT override to grub.d
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  lineinfile:
+    create: no
+    backup: yes
+    state: present
+    dest: /etc/grub.d/10_linux
+    regexp: '^\s*initrd\s.*rel_dirname'
+    line: '	initrd	/boot/acpi_override.img	${rel_dirname}/${initrd}'
+  notify:
+    - update grub
+
+
+# https://forums.lenovo.com/t5/Linux-Discussion/X1-Carbon-Gen-6-cannot-enter-deep-sleep-S3-state-aka-Suspend-to/m-p/4056794/highlight/true#M10831
+#
+# Remove `acpi.ec_no_wakeup=1`: I tried this, and it's an improvement
+# (only 10% battery loss in suspend overnight, compared to clearly not
+# even sleeping when the laptop lid is closed), but it does not come out
+# of suspend when opening the lid -- I need to push the power button to
+# wake. Several people recommend just patching the ACPI DSDT instead, and
+# having tried both, patching the DSDT works significantly better.
+- name: add to deep sleep to grub options
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  lineinfile:
+    create: yes
+    backup: yes
+    dest: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
+    # note: "mem_sleep_default=deep" instead of "acpi.ec_no_wakeup=1"
+    line: 'GRUB_CMDLINE_LINUX_DEFAULT="loglevel=4 slub_debug=P page_poison=1 mem_sleep_default=deep"'
+  notify:
+    - update grub
+
+- name: ensure dracut is configured to use microcode
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  lineinfile:
+    path: /etc/dracut.conf.d/intel_ucode.conf
+    create: yes
+    line: 'early_microcode=yes'
+
+- name: install intel microcode updates
+  become: yes
+  when: ansible_distribution == "void" and is_laptop
+  xbps:
+    name: intel-ucode
+    state: present
+  notify:
+    - reconfigure kernel

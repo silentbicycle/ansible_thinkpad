@@ -1,0 +1,13 @@
+---
+
+- name: install homedir
+  synchronize:
+    src: '{{ansible_env.HOME}}/dev/homedir/'
+    dest: '{{ansible_env.HOME}}'
+    recursive: yes
+  delegate_to: '{{ansible_hostname}}'
+
+- name: fix homedir permissions
+  file:
+    path: '{{ansible_env.HOME}}'
+    mode: 0700

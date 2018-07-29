@@ -1,0 +1,8 @@
+---
+
+## not available in 1.7.2, new in 1.9
+# - name: set known_hosts for shenani.gen.nz
+#   known_hosts:
+#     name: shenani.gen.nz
+#     state: present
+#     key: "shenani.gen.nz ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC44PrUjH84X3wpP+GtYI0QeKfRt++ISMNpaP8pYtjn6wkAgT+fJaSM/s2jzeQI1uv8kw+48Ga8u3Cz3kyLKDywpaWPEOfnfFd7RqMC7OioiovfdpevC0Jjeb1UlW69OR1qqPISiYKWM62KVsgYV8XkqjFav3F7lo4zOSrshEjft+V65cTBBdJw4hipGjlmM9t+1+l7dImiHgQFeGWLGjDMlDe7WPSxMtnuMMIFyFPwdFXdjkfLFzAGQDwUy1XQtq42SO0S1kDA+SPV2ffJwOpHkiVmCQR3v4pp4SSf0UMnl7gSPnaWJzUpN3Tp6ksTdbQLZ4zDPpYmUeT7UlG5SQ9P"

@@ -1,0 +1,5 @@
+---
+
+- include: hardware.yml
+
+- include: acpi_events.yml

@@ -1,0 +1,10 @@
+---
+
+- name: set up packaging / mirror stuff
+  include: packaging.yml
+
+- name: set up cron for root
+  include: root_cron.yml
+
+- name: install essentials
+  include: install_essentials.yml

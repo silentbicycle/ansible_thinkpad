@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# bootstrap Void Linux on a LOCAL host
+LOCAL_USER=${USER}
+
+echo "Installing sudo, ansible, and sshpass, and adding local user."
+echo "This will prompt for the su password..."
+su -c 'xbps-install -S sudo ansible sshpass && usermod -a -G wheel ${LOCAL_USER}'
+
+echo "Note: you will need to log back in for the group change to take effect."

@@ -1,0 +1,51 @@
+---
+
+- name: install android file transfer (void)
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: android-file-transfer-linux
+    state: latest
+
+- name: install simple-mtpfs (void)
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: simple-mtpfs
+    state: latest
+
+- name: ensure plugdev group exists
+  become: yes
+  when: ansible_os_family == "void"
+  group:
+    name: plugdev
+    state: present
+
+- name: ensure user is in plugdev group
+  become: yes
+  when: ansible_os_family == "void"
+  user:
+    append: yes
+    groups: plugdev
+    name: '{{ansible_user_id}}'
+
+- name: ensure /etc/udev/rules.d exists
+  become: yes
+  file:
+    path: /etc/udev/rules.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: add a udev rule for android phone
+  become: yes
+  when: ansible_os_family == "void"
+  copy:
+    src: 90-android-phone-in-plugdev-group.rules
+    dest: /etc/udev/rules.d/90-android-phone-in-plugdev-group.rules
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - update udev rules

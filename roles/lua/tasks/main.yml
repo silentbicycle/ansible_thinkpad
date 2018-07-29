@@ -1,0 +1,20 @@
+---
+- name: install Lua stuff (Void)
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - lua
+    - lua52
+    - LuaJIT
+    - luarocks
+    - luarocks-lua52
+    - lua-lpeg
+    - lua-zlib
+    - luasocket
+    - luaposix
+    - luaexpat
+    - luafilesystem
+    - luasec

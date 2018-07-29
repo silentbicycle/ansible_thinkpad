@@ -1,0 +1,33 @@
+---
+gnu_make: make
+
+is_desktop: false
+is_laptop: false
+
+run_sshd: false
+use_x11: false
+
+# override these in host_vars
+install_git_homedir: false
+
+install_av: false
+install_games: false
+install_virtualization: false
+
+install_c: false
+install_clojure: false
+install_erlang: false
+install_lisp: false
+install_lua: false
+install_ocaml: false
+install_prolog: false
+install_python: false
+install_ruby: false
+install_j: false
+install_k: false
+
+install_phone_tools: false
+
+install_spotify: false
+install_steam: false
+install_dwarf_fortress: false

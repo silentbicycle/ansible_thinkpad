@@ -1,0 +1,35 @@
+---
+# install essential stuff
+
+- name: install essentials (void)
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - ansible
+    - apg
+    - bzip2
+    - cowsay
+    - figlet
+    - git-all
+    - make
+    - patch
+    - pwgen
+    - rsync
+    - runit
+    - sqlite
+    - tmux
+    - unzip
+    - zip
+
+- name: install pirate cow (void)
+  become: yes
+  when: ansible_os_family == "void"
+  copy:
+    src: pirate.cow
+    dest: /usr/share/cows/pirate.cow
+    owner: root
+    group: root
+    mode: 0644

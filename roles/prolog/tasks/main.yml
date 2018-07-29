@@ -1,0 +1,9 @@
+---
+- name: install prolog and related tooling (void)
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - swi-prolog

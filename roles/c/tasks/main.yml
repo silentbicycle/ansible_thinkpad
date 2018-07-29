@@ -1,0 +1,16 @@
+---
+
+- name: install C related tooling (Void)
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - afl
+    - astyle
+    - gcc
+    - gdb
+    - clang
+    - clang-analyzer
+    - valgrind

@@ -1,0 +1,6 @@
+! http://efod.se/writings/linuxbook/html/caps-lock-to-ctrl.html
+keycode 66 = Control_L
+clear Lock
+add Control = Control_L
+keycode 117 = Page_Down
+add Lock = Caps_Lock

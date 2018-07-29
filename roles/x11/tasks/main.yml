@@ -1,0 +1,7 @@
+---
+- name: install x11 stuff
+  when: ansible_distribution == "void"
+  include: install_x11_void.yml
+
+- name: install web browsers
+  include: install_web_browsers.yml

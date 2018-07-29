@@ -1,0 +1,49 @@
+---
+- name: install AV stuff
+  become: yes
+  when: ansible_distribution == "void"
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - mplayer
+    - mpg123
+    - alsa-lib
+    - alsa-utils
+
+- name: enable hda-intel sound card
+  become: yes
+  when: ansible_distribution == "void" and sound_card is defined and sound_card == "hda-intel"
+  lineinfile:
+    path: /etc/modprobe.d/snd-hda-intel.conf
+    line: "options snd-hda-intel model=auto"
+    state: present
+    create: yes
+
+- name: install other audio dependencies
+  become: yes
+  when: ansible_distribution == "void"
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - dbus
+
+- name: enable services (void)
+  become: yes
+  when: ansible_distribution == "void"
+  file:
+    src: "/etc/sv/{{item}}"
+    dest: "/var/service/{{item}}"
+    state: link
+  with_items:
+    - dbus
+    - alsa
+
+- name: set up mpd and music
+  include: mpd.yml
+  when: mpd_dir is defined
+
+- name: install spotify
+  include: install_spotify.yml
+  when: install_spotify

@@ -1,0 +1,16 @@
+---
+
+- name: trace become_method
+  when: become_method is defined
+  debug:
+    var: become_method
+
+- name: install ssh keys
+  import_tasks: install_ssh_keys.yml
+
+- name: stuff that needs root access
+  when: has_root is defined
+  import_tasks: root_stuff.yml
+
+- name: set up cron for the user
+  import_tasks: user_cron.yml

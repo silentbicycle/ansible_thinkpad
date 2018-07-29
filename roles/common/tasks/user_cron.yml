@@ -1,0 +1,56 @@
+---
+- name: configure cron for user
+  file: path="{{ansible_env.HOME}}/bin/cron/" state="directory"
+
+- name: copy exec_dir script (user)
+  copy: src="exec_dir" mode="0744" dest="{{ansible_env.HOME}}/bin/exec_dir"
+
+- name: add parametric cron directories for user
+  cron:
+    name: "exec {{item}} dir"
+    special_time: "{{item}}"
+    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/{{item}}.d"
+  with_items:
+    - reboot
+
+- name: configure yearly
+  cron:
+    name: "exec yearly dir"
+    month: 1
+    day: 1
+    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/yearly.d"
+
+- name: configure monthly
+  cron:
+    name: "exec monthly dir"
+    day: 1
+    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/monthly.d"
+
+- name: configure weekly
+  cron:
+    name: "exec weekly dir"
+    weekday: 0
+    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/weekly.d"
+
+- name: configure daily
+  cron:
+    name: "exec daily dir"
+    hour: 0
+    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/daily.d"
+
+- name: configure hourly
+  cron:
+    name: "exec hourly dir"
+    minute: 0
+    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/hourly.d"
+
+- name: configure minutely (which has no special_time abbrev)
+  cron:
+    name: "exec minutely dir"
+    minute: 0-59
+    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/minutely.d"
+
+- name: remove inconsistently named minutely task
+  cron:
+    name: "exec minutely"
+    state: absent

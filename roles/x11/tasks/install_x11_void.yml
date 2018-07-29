@@ -1,0 +1,56 @@
+---
+
+- name: install xorg packages
+  when: ansible_distribution == "void"
+  become: yes
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - dmenu
+    - rxvt-unicode
+    - spectrwm
+    - workrave
+    - xbindkeys
+    - xorg
+    - xorg-fonts
+    - terminus-font
+    - font-inconsolata-otf
+
+- name: install other useful x packages
+  when: ansible_distribution == "void"
+  become: yes
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - mupdf
+    - xsel
+    - xclip
+    - xvkbd
+
+- name: set up xorg.conf.d directory
+  when: ansible_distribution == "void"
+  become: yes
+  file:
+    dest: /etc/X11/xorg.conf.d/
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: set keyboard layout to dvorak
+  become: yes
+  copy:
+    src: 20-keyboard_dvorak.conf
+    dest: /etc/X11/xorg.conf.d/20-keyboard_dvorak.conf
+    owner: root
+    group: root
+    mode: 0744
+
+# this will be run via .xinitrc
+- name: install dunst notification server
+  become: yes
+  xbps:
+    name: dunst
+    state: present

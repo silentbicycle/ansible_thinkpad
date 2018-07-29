@@ -1,0 +1,87 @@
+---
+
+- name: install mpd and clients
+  become: yes
+  when: ansible_distribution == "void"
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - mpd
+    - ncmpc
+    - mpc
+
+- name: enable mpd services (void)
+  become: yes
+  when: ansible_distribution == "void"
+  file:
+    src: "/etc/sv/{{item}}"
+    dest: "/var/service/{{item}}"
+    state: link
+  with_items:
+    - mpd
+
+- name: ensure music directory exists and uses audio group
+  become: yes
+  file:
+    path: '{{ mpd_dir }}'
+    state: directory
+    owner: '{{ansible_user_id}}'
+    group: audio
+    mode: 0750
+    recurse: yes
+
+- name: set mpd music directory
+  become: yes
+  lineinfile:
+    dest: /etc/mpd.conf
+    backup: yes
+    state: present
+    regexp: ^music_directory
+    line: music_directory "{{mpd_dir}}"
+
+- name: set mpd music port
+  become: yes
+  lineinfile:
+    dest: /etc/mpd.conf
+    backup: yes
+    state: present
+    regexp: ^#?bind_to_address
+    line: bind_to_address "127.0.0.1"
+
+- name: add mpd user to audio
+  become: yes
+  when: ansible_distribution == "void"
+  user:
+    append: yes
+    name: mpd
+    groups: audio
+
+- name: ensure alsa pulseaudio plugin is present
+  become: yes
+  when: ansible_distribution == "void"
+  xbps:
+    name: alsa-plugins-pulseaudio
+    state: present
+
+# This seemed to become necessary after an upstream change to mpd,
+# apparently; it seems possibly related to
+#     http://mailman.blarg.de/pipermail/mpd-devel/2016-June/000523.html
+# I think it's trying to use sndio, which isn't configured properly,
+# whereas it previously defaulted to alsa/pulseaudio (which worked)?
+#
+# This works on my machine, at least, and is an exmaple of the
+# blockinfile module.
+- name: configure mpd to use alsa and pulseaudio
+  become: yes
+  when: ansible_distribution == "void"
+  blockinfile:
+    path: /etc/mpd.conf
+    backup: yes
+    insertafter: "# An example of an ALSA output:"
+    block: |
+      audio_output {
+      	type		"alsa"
+      	name		"My ALSA Device"
+      	device		"pulse"
+      }

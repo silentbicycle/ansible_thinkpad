@@ -1,0 +1,21 @@
+---
+
+- name: install nonfree void repo
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: void-repo-nonfree
+    state: present
+
+- name: update void package cache
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    update_cache: yes
+
+- name: install spotify app
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: spotify
+    state: latest

@@ -1,0 +1,15 @@
+---
+
+# Development stuff that isn't language-specific
+
+- name: install dirs
+  include: install_dirs.yml
+
+- name: install editors
+  include: install_editors.yml
+
+- name: install networking tools
+  include: install_networking.yml
+
+- name: install misc
+  include: install_misc.yml

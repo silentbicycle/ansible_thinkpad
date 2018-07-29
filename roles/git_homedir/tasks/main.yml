@@ -1,0 +1,12 @@
+---
+
+- name: clone homedir git repo in ~
+  when: vc_host_path is defined
+  git:
+    repo: 'ssh://{{vc_host_path}}/{{git_homedir_repo_name}}'
+    dest: '{{ansible_env.HOME}}/dev/homedir/'
+    update: no
+    accept_hostkey: true
+  notify:
+    - install homedir
+    - fix homedir permissions

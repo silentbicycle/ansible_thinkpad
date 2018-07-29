@@ -1,0 +1,6 @@
+*.foreground: white
+*.background: black
+
+URxvt.font:		xft:terminus:size=16:antialias=true
+URxvt.boldFont:		xft:terminus bold:size=16:antialias=true
+URxvt.scrollBar:        0

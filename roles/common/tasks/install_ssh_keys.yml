@@ -1,0 +1,9 @@
+---
+
+- name: install SSH key (malort)
+  become: no
+  authorized_key:
+    key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDEvcC0HnNpyhlSWjQrHZIft0bkZtRuBHEVwPiTaRch52u7ChLk2xxCdzUA7rmyTCUnJTTw70GoP1edrjjzSm+pegeoKT/CGdNP7ktoGfe7ydnJZ/FybxLETIqX4NfQOquW75Z6uO6o0jmeN11VruhQsGXwbsWtEhlEnExcQl4yzeZwcaS2++N7zSE3jrYtwM/yVj4ML/EmCIF6BZpLSDQlJ5VewVMEivcXaUh5HI2OBMqOpOu2wH4o65A3Mk04QzJcjJO5Ld2u0SVFzqYQhsRL01RNMV1uGjj6zjezR+w7LxDM7u+DL8jZtH+9J2UgD7XFVwKwiUKU9SeD8U1M7b7F scott@malort"
+    user: "{{ansible_user_id}}"
+    state: present
+

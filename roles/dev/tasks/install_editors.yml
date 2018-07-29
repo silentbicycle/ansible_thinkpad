@@ -1,0 +1,11 @@
+---
+
+- name: install editors (void)
+  become: yes
+  when: ansible_os_family == "void"
+  xbps:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - emacs-x11
+    - vim
