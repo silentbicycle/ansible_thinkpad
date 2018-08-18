@@ -83,7 +83,7 @@
     regexp: '^#?HARDWARECLOCK='
     line: 'HARDWARECLOCK=UTC'
 
-- name: set local timezone to America/Detroit
+- name: set local timezone
   become: yes
   lineinfile:
     backup: yes
@@ -91,7 +91,7 @@
     create: yes
     path: /etc/rc.conf
     regexp: '^#?TIMEZONE='
-    line: 'TIMEZONE=America/Detroit'
+    line: 'TIMEZONE={{host_timezone}}'
 
 - name: set terminal font
   become: yes
