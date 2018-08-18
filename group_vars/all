@@ -8,6 +8,8 @@ run_sshd: false
 use_x11: false
 
 # override these in host_vars
+host_timezone=America/Detroit
+
 install_git_homedir: false
 
 install_av: false
