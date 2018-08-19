@@ -1,8 +1,9 @@
 ---
 
-- name: install my preferred shell
+- name: install preferred shell
   become: yes
-  xbps: name=oksh state=latest
+  when: preferred_shell is defined
+  xbps: name={{preferred_shell}} state=latest
 
 - name: ensure user is in wheel group
   become: yes
@@ -12,11 +13,12 @@
     name: '{{ansible_user_id}}'
 
 
-- name: change shell to oksh
+- name: change default shell
   become: yes
+  when: preferred_shell is defined
   user:
     name: '{{ansible_user_id}}'
-    shell: /bin/oksh
+    shell: /bin/{{preferred_shell}}
 
 - name: install man pages
   become: yes
