@@ -20,6 +20,14 @@
     state: present
     create: yes
 
+- name: ensure user is in audio group
+  become: yes
+  when: ansible_os_family == "void"
+  user:
+    append: yes
+    groups: audio
+    name: '{{ansible_user_id}}'
+
 - name: install other audio dependencies
   become: yes
   when: ansible_distribution == "void"
