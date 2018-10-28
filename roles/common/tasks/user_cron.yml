@@ -16,6 +16,8 @@
 - name: configure yearly
   cron:
     name: "exec yearly dir"
+    minute: 0
+    hour: 1
     month: 1
     day: 1
     job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/yearly.d"
@@ -23,18 +25,23 @@
 - name: configure monthly
   cron:
     name: "exec monthly dir"
+    minute: 0
+    hour: 2
     day: 1
     job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/monthly.d"
 
 - name: configure weekly
   cron:
     name: "exec weekly dir"
+    minute: 0
+    hour: 3
     weekday: 0
     job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/weekly.d"
 
 - name: configure daily
   cron:
     name: "exec daily dir"
+    minute: 15
     hour: 0
     job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/daily.d"
 

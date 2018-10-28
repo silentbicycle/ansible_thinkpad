@@ -145,7 +145,7 @@
 - name: ensure root weekly cron dir exists
   become: yes
   file:
-    path: "{{ansible_env.HOME}}/bin/cron/weekly.d/"
+    path: "/root/bin/cron/weekly.d/"
     state: directory
     owner: root
     group: root
@@ -156,4 +156,4 @@
   copy:
     src: "clear-xbps-pkg-cache"
     mode: "0744"
-    dest: "{{ansible_env.HOME}}/bin/cron/weekly.d/clear-xbps-pkg-cache"
+    dest: "/root/bin/cron/weekly.d/clear-xbps-pkg-cache"

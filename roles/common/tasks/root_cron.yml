@@ -48,37 +48,44 @@
   become: yes
   cron:
     name: "exec_dir yearly"
+    minute: 0
+    hour: 1
     month: 1
     day: 1
-    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/yearly.d"
+    job: "/root/bin/exec_dir /root/bin/cron/yearly.d"
 
 - name: configure monthly
   become: yes
   cron:
     name: "exec_dir monthly"
+    minute: 0
+    hour: 2
     day: 1
-    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/monthly.d"
+    job: "/root/bin/exec_dir /root/bin/cron/monthly.d"
 
 - name: configure weekly
   become: yes
   cron:
     name: "exec_dir weekly"
+    minute: 0
+    hour: 3
     weekday: 0
-    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/weekly.d"
+    job: "/root/bin/exec_dir /root/bin/cron/weekly.d"
 
 - name: configure daily
   become: yes
   cron:
     name: "exec_dir daily"
+    minute: 15
     hour: 0
-    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/daily.d"
+    job: "/root/bin/exec_dir /root/bin/cron/daily.d"
 
 - name: configure hourly
   become: yes
   cron:
     name: "exec_dir hourly"
     minute: 0
-    job: "{{ansible_env.HOME}}/bin/exec_dir {{ansible_env.HOME}}/bin/cron/hourly.d"
+    job: "/root/bin/exec_dir /root/bin/cron/hourly.d"
 
 - name: configure minutely
   become: yes
